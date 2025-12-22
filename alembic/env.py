@@ -14,6 +14,7 @@ sys.path.append(os.getcwd())
 
 from src.conf.settings import settings
 from src.database.base import Base
+from src.users.models import User
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
