@@ -6,6 +6,7 @@ from src.database.db import get_db
 from src.auth.utils import decode_token
 from src.users.repository import get_user_by_email
 from src.users.models import User
+from src.users.enums import RoleEnum
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/auth/login")
 
@@ -33,3 +34,25 @@ async def get_current_user(token: str = Depends(oauth2_scheme), db: AsyncSession
         raise credentials_exception
 
     return user
+
+
+class RoleChecker:
+    """
+    Dependency callable class to check if the user has the required role.
+    """
+    def __init__(self, allowed_roles: list[RoleEnum]):
+        self.allowed_roles = allowed_roles
+
+    async def __call__(self, user: User = Depends(get_current_user)) -> User:
+        """
+        Verifies the user's role against the allowed roles.
+
+        :param user: The current authenticated user (injected by Depends).
+        :return: The user object if access is granted.
+        """
+        if user.role.name not in [role.value for role in self.allowed_roles]:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="You do not have permission to perform this action",
+            )
+        return user
