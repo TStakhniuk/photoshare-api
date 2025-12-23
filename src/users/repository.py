@@ -1,8 +1,20 @@
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select
-from src.users.models import User
+from sqlalchemy import select, func
+from src.users.models import User, Role
+from src.users.enums import RoleEnum
 from src.users.schemas import UserCreate
 from src.auth.security import get_password_hash
+
+
+async def count_users(db: AsyncSession) -> int:
+    """
+    Counts the total number of users in the database.
+
+    :param db: The database session.
+    :return: The count of users.
+    """
+    result = await db.execute(select(func.count(User.id)))
+    return result.scalar()
 
 
 async def create_user(db: AsyncSession, data: UserCreate) -> User:
@@ -10,15 +22,25 @@ async def create_user(db: AsyncSession, data: UserCreate) -> User:
     Creates a new user in the database.
 
     :param db: The database session.
-    :param data: The data required to create a user (username, email, password).
+    :param data: The data required to create a user (username, email, password, role).
     :return: The newly created User object.
     """
     hashed_password = get_password_hash(data.password)
+
+    users_count = await count_users(db)
+
+    if users_count == 0:
+        role_name = RoleEnum.ADMIN.value
+    else:
+        role_name = RoleEnum.USER.value
+
+    role = await get_role_by_name(db, role_name)
 
     new_user = User(
         username=data.username,
         email=data.email,
         hashed_password=hashed_password,
+        role=role,
     )
 
     db.add(new_user)
@@ -48,4 +70,16 @@ async def get_user_by_username(db: AsyncSession, username: str) -> User | None:
     :return: The User object if found, otherwise None.
     """
     result = await db.execute(select(User).where(User.username == username))
+    return result.scalar_one_or_none()
+
+
+async def get_role_by_name(db: AsyncSession, name: str) -> Role | None:
+    """
+    Retrieves a role by its name.
+
+    :param db: The database session.
+    :param name: The name of the role.
+    :return: The Role object if found, otherwise None.
+    """
+    result = await db.execute(select(Role).where(Role.name == name))
     return result.scalar_one_or_none()
