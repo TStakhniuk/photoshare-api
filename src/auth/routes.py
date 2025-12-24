@@ -3,6 +3,11 @@ from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.database.db import get_db
+from src.auth.dependencies import oauth2_scheme, get_current_user
+from src.database.redis import get_redis
+from src.auth.token_blacklist import add_token_to_blacklist
+import redis.asyncio as redis
+from src.users.models import User
 from src.users.schemas import UserCreate, UserResponse
 from src.auth.schemas import Token, TokenRefresh
 from src.users.repository import create_user, get_user_by_email, get_user_by_username
@@ -91,3 +96,19 @@ async def refresh_tokens(data: TokenRefresh, db: AsyncSession = Depends(get_db))
     new_refresh_token = create_refresh_token(data={"sub": user.email})
 
     return Token(access_token=access_token, refresh_token=new_refresh_token, token_type="bearer")
+
+
+@router.post("/logout", status_code=status.HTTP_204_NO_CONTENT)
+async def logout(
+    token: str = Depends(oauth2_scheme),
+    current_user: User = Depends(get_current_user),
+    redis_client: redis.Redis = Depends(get_redis)
+):
+    """
+    Logs out the current user by invalidating their access token.
+
+    :param token: The access token to invalidate.
+    :param current_user: The currently authenticated user (ensures the token is valid before logging out).
+    :param redis_client: The Redis client dependency.
+    """
+    await add_token_to_blacklist(token, redis_client)

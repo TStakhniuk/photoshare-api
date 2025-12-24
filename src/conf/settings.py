@@ -8,6 +8,7 @@ class Settings(BaseSettings):
     DATABASE_URL: str = "postgresql+asyncpg://postgres:password@localhost:5432/postgres"
     SECRET_KEY: str = "secret"
     ALGORITHM: str = "HS256"
+    REDIS_URL: str = "redis://localhost:6379/0"
 
     class Config:
         env_file = ROOT_DIR / ".env"
