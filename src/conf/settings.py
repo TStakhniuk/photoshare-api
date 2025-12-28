@@ -6,6 +6,7 @@ ROOT_DIR = BASE_DIR.parent                        # project root
 
 class Settings(BaseSettings):
     DATABASE_URL: str = "postgresql+asyncpg://postgres:password@localhost:5432/postgres"
+    DATABASE_TEST_URL: str = "postgresql+asyncpg://user:password@localhost:5432/postgres_test"
     SECRET_KEY: str = "secret"
     ALGORITHM: str = "HS256"
     REDIS_URL: str = "redis://localhost:6379/0"
