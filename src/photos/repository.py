@@ -48,7 +48,7 @@ class TagRepository:
         if tag is None:
             tag = Tag(name=name)
             self.session.add(tag)
-            await self.session.flush()
+            await self.session.commit()
             await self.session.refresh(tag)
 
         return tag
@@ -208,7 +208,7 @@ class PhotoRepository:
         )
 
         self.session.add(photo)
-        await self.session.flush()
+        await self.session.commit()
         await self.session.refresh(photo)
 
         return photo
@@ -226,7 +226,7 @@ class PhotoRepository:
         if photo_data.description is not None:
             photo.description = photo_data.description
 
-        await self.session.flush()
+        await self.session.commit()
         await self.session.refresh(photo)
 
         return photo
@@ -244,7 +244,7 @@ class PhotoRepository:
         tags = await self.tag_repo.get_or_create_many(tag_names)
         photo.tags = tags
 
-        await self.session.flush()
+        await self.session.commit()
         await self.session.refresh(photo)
 
         return photo
@@ -259,7 +259,7 @@ class PhotoRepository:
         - **bool**: True if successfully deleted.
         """
         await self.session.delete(photo)
-        await self.session.flush()
+        await self.session.commit()
         return True
 
     async def search_by_description(
@@ -497,7 +497,7 @@ class PhotoTransformationRepository:
         )
 
         self.session.add(transformation)
-        await self.session.flush()
+        await self.session.commit()
         await self.session.refresh(transformation)
 
         return transformation

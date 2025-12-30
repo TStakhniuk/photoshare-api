@@ -10,14 +10,12 @@ class Settings(BaseSettings):
     SECRET_KEY: str = "secret"
     ALGORITHM: str = "HS256"
     REDIS_URL: str = "redis://localhost:6379/0"
+    CLOUDINARY_CLOUD_NAME: str = "cloud_name"
+    CLOUDINARY_API_KEY: str = "api_key"
+    CLOUDINARY_API_SECRET: str = "api_secret"
 
     class Config:
         env_file = ROOT_DIR / ".env"
         extra = "ignore"
 
 settings = Settings()
-
-# Cloudinary (отримати на https://cloudinary.com)
-CLOUDINARY_CLOUD_NAME=dwtoxesmd
-CLOUDINARY_API_KEY=274132468267183
-CLOUDINARY_API_SECRET=KgKKUODmbQ3uJVfajdWjsjHyj7k
