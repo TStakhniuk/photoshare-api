@@ -18,6 +18,6 @@ class Settings(BaseSettings):
 settings = Settings()
 
 # Cloudinary (отримати на https://cloudinary.com)
-CLOUDINARY_CLOUD_NAME=your-cloud-name
-CLOUDINARY_API_KEY=your-api-key
-CLOUDINARY_API_SECRET=your-api-secret
+CLOUDINARY_CLOUD_NAME=dwtoxesmd
+CLOUDINARY_API_KEY=274132468267183
+CLOUDINARY_API_SECRET=KgKKUODmbQ3uJVfajdWjsjHyj7k
