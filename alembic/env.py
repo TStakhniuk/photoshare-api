@@ -17,6 +17,7 @@ from src.database.base import Base
 from src.users.models import User, Role
 from src.photos.models import Photo
 from src.comments.models import Comment
+from src.photos.models import Tag, Photo, PhotoTransformation
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.

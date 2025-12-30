@@ -44,7 +44,16 @@ async def upload_photo(
 
     - Supports JPG, JPEG, PNG, GIF, WEBP formats
     - Maximum 5 tags allowed
+
+    **Args:**
+    - **file**: The image file to upload (JPG, PNG, etc.).
+    - **description**: Optional text description of the photo.
+    - **tags**: Optional comma-separated list of tags (e.g., "nature,vacation"). Max 5 tags.
+
+    **Returns:**
+    - **PhotoResponse**: The created photo object including URL and metadata.
     """
+
     # Validate file type
     if not file.content_type or not file.content_type.startswith("image/"):
         raise HTTPException(
@@ -86,7 +95,16 @@ async def get_photos(
     page: int = Query(1, ge=1),
     size: int = Query(20, ge=1, le=100),
 ):
-    """Get all photos with pagination."""
+    """Get all photos with pagination.
+
+    **Args:**
+    - **page**: Page number (starts from 1).
+    - **size**: Number of items per page (max 100).
+
+    **Returns:**
+    - **PhotoListResponse**: A paginated list of photos with total count information.
+    """
+
     photo_repo = PhotoRepository(db)
 
     skip = (page - 1) * size
@@ -128,6 +146,17 @@ async def search_photos(
     - Filter by rating range
     - Filter by date range
     - Sort by date or rating
+
+    **Args:**
+    - **keyword**: Search in description.
+    - **tag**: Filter by specific tag.
+    - **user_id**: Filter by owner's ID.
+    - **min_rating / max_rating**: Filter by average rating range (1-5).
+    - **date_from / date_to**: Range for creation date.
+    - **sort_by**: Field to sort by ('created_at' or 'rating').
+
+    **Returns:**
+    - **PhotoListResponse**: Filtered and paginated list of photos.
     """
     photo_repo = PhotoRepository(db)
 
@@ -162,7 +191,14 @@ async def get_photo(
     photo_id: int,
     db: AsyncSession = Depends(get_db),
 ):
-    """Get a photo by ID."""
+    """Get a photo by ID.
+
+    **Args:**
+    - **photo_id**: Unique identifier of the photo.
+
+    **Returns:**
+    - **PhotoResponse**: Full details of the photo.
+    """
     photo_repo = PhotoRepository(db)
     photo = await photo_repo.get_by_id(photo_id)
 
@@ -187,6 +223,13 @@ async def update_photo(
 
     - Users can update their own photos
     - Admins can update any photo
+
+    **Args:**
+    - **photo_id**: ID of the photo to update.
+    - **photo_data**: New data for the photo.
+
+    **Returns:**
+    - **PhotoResponse**: The updated photo object.
     """
     photo_repo = PhotoRepository(db)
     photo = await photo_repo.get_by_id(photo_id)
@@ -219,6 +262,12 @@ async def delete_photo(
 
     - Users can delete their own photos
     - Admins can delete any photo
+
+    **Args:**
+    - **photo_id**: ID of the photo to delete.
+
+    **Returns:**
+    - **204 No Content** on success.
     """
     photo_repo = PhotoRepository(db)
     photo = await photo_repo.get_by_id(photo_id)
@@ -264,6 +313,13 @@ async def transform_photo(
     - grayscale: Black and white
     - sepia: Sepia tone
     - blur: Blur effect
+
+    **Args:**
+    - **photo_id**: ID of the source photo.
+    - **transform_data**: Specification of the transformation (circle, blur, etc.).
+
+    **Returns:**
+    - **PhotoTransformResponse**: URL of the transformed image and a QR code link.
     """
     photo_repo = PhotoRepository(db)
     photo = await photo_repo.get_by_id(photo_id)
@@ -330,7 +386,14 @@ async def get_photo_transformations(
     photo_id: int,
     db: AsyncSession = Depends(get_db),
 ):
-    """Get all transformations for a photo."""
+    """Get all transformations for a photo.
+
+    **Args:**
+    - **photo_id**: ID of the source photo.
+
+    **Returns:**
+    - **List[PhotoTransformResponse]**: Array of transformation records.
+    """
     photo_repo = PhotoRepository(db)
     photo = await photo_repo.get_by_id(photo_id)
 
@@ -351,7 +414,14 @@ async def get_photo_qr_code(
     photo_id: int,
     db: AsyncSession = Depends(get_db),
 ):
-    """Get QR code for photo URL."""
+    """Get QR code for photo URL.
+
+    **Args:**
+    - **photo_id**: ID of the photo.
+
+    **Returns:**
+    - **PNG image**: Direct byte stream of the QR code.
+    """
     photo_repo = PhotoRepository(db)
     photo = await photo_repo.get_by_id(photo_id)
 
@@ -378,7 +448,16 @@ async def get_user_photos(
     skip: int = Query(0, ge=0),
     limit: int = Query(20, ge=1, le=100),
 ):
-    """Get all photos by a specific user."""
+    """Get all photos by a specific user.
+
+    **Args:**
+    - **user_id**: ID of the user.
+    - **skip**: Number of records to skip.
+    - **limit**: Maximum records to return.
+
+    **Returns:**
+    - **List[PhotoResponse]**: List of user's photos.
+    """
     photo_repo = PhotoRepository(db)
     photos = await photo_repo.get_by_user(user_id, skip=skip, limit=limit)
 

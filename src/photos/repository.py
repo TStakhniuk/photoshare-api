@@ -20,14 +20,28 @@ class TagRepository:
         self.session = session
 
     async def get_by_name(self, name: str) -> Tag | None:
-        """Get tag by name."""
+        """Get tag by name.
+
+        **Args:**
+        - **name**: String name of the tag.
+
+        **Returns:**
+        - **Tag | None**: Tag object if found, else None.
+        """
         result = await self.session.execute(
             select(Tag).where(Tag.name == name.lower())
         )
         return result.scalar_one_or_none()
 
     async def get_or_create(self, name: str) -> Tag:
-        """Get existing tag or create new one."""
+        """Get existing tag or create new one.
+
+        **Args:**
+        - **name**: String name of the tag.
+
+        **Returns:**
+        - **Tag**: The existing or newly created Tag object.
+        """
         name = name.lower().strip()
         tag = await self.get_by_name(name)
 
@@ -40,7 +54,14 @@ class TagRepository:
         return tag
 
     async def get_or_create_many(self, names: list[str]) -> list[Tag]:
-        """Get or create multiple tags. Limit to 5 tags."""
+        """Get or create multiple tags. Limit to 5 tags.
+
+        **Args:**
+        - **names**: List of tag names as strings.
+
+        **Returns:**
+        - **list[Tag]**: List of Tag objects (maximum 5).
+        """
         tags = []
         for name in names[:5]:  # Limit to 5 tags per ТЗ
             if name.strip():
@@ -49,7 +70,15 @@ class TagRepository:
         return tags
 
     async def get_all(self, skip: int = 0, limit: int = 100) -> list[Tag]:
-        """Get all tags with pagination."""
+        """Get all tags with pagination.
+
+        **Args:**
+        - **skip**: Number of records to skip.
+        - **limit**: Maximum number of records to return.
+
+        **Returns:**
+        - **list[Tag]**: List of all Tag objects within the range.
+        """
         result = await self.session.execute(
             select(Tag).offset(skip).limit(limit)
         )
@@ -64,7 +93,14 @@ class PhotoRepository:
         self.tag_repo = TagRepository(session)
 
     async def get_by_id(self, photo_id: int) -> Photo | None:
-        """Get photo by ID with related data."""
+        """Get photo by ID with related data.
+
+        **Args:**
+        - **photo_id**: Unique identifier of the photo.
+
+        **Returns:**
+        - **Photo | None**: Photo object with eager-loaded relationships or None.
+        """
         result = await self.session.execute(
             select(Photo)
             .options(
@@ -78,7 +114,16 @@ class PhotoRepository:
     async def get_by_user(
         self, user_id: int, skip: int = 0, limit: int = 20
     ) -> list[Photo]:
-        """Get photos by user ID."""
+        """Get photos by user ID.
+
+        **Args:**
+        - **user_id**: ID of the owner.
+        - **skip**: Offset for pagination.
+        - **limit**: Items per page.
+
+        **Returns:**
+        - **list[Photo]**: List of user's Photo objects.
+        """
         result = await self.session.execute(
             select(Photo)
             .options(selectinload(Photo.tags))
@@ -90,7 +135,15 @@ class PhotoRepository:
         return list(result.scalars().all())
 
     async def get_all(self, skip: int = 0, limit: int = 20) -> list[Photo]:
-        """Get all photos with pagination."""
+        """Get all photos with pagination.
+
+        **Args:**
+        - **skip**: Offset for pagination.
+        - **limit**: Items per page.
+
+        **Returns:**
+        - **list[Photo]**: List of Photo objects.
+        """
         result = await self.session.execute(
             select(Photo)
             .options(selectinload(Photo.tags))
@@ -101,14 +154,25 @@ class PhotoRepository:
         return list(result.scalars().all())
 
     async def get_total_count(self) -> int:
-        """Get total count of photos."""
+        """Get total count of photos.
+
+        **Returns:**
+        - **int**: Total count.
+        """
         result = await self.session.execute(
             select(func.count(Photo.id))
         )
         return result.scalar() or 0
 
     async def get_user_photos_count(self, user_id: int) -> int:
-        """Get count of photos by user."""
+        """Get count of photos by user.
+
+        **Args:**
+        - **user_id**: ID of the user.
+
+        **Returns:**
+        - **int**: Count of photos.
+        """
         result = await self.session.execute(
             select(func.count(Photo.id)).where(Photo.user_id == user_id)
         )
@@ -121,7 +185,17 @@ class PhotoRepository:
         cloudinary_public_id: str,
         photo_data: PhotoCreate
     ) -> Photo:
-        """Create a new photo."""
+        """Create a new photo.
+
+        **Args:**
+        - **user_id**: ID of the creator.
+        - **url**: Direct link to the image.
+        - **cloudinary_public_id**: ID from Cloudinary storage.
+        - **photo_data**: Schema containing description and tags.
+
+        **Returns:**
+        - **Photo**: The created Photo object.
+        """
         # Get or create tags
         tags = await self.tag_repo.get_or_create_many(photo_data.tags)
 
@@ -140,7 +214,15 @@ class PhotoRepository:
         return photo
 
     async def update(self, photo: Photo, photo_data: PhotoUpdate) -> Photo:
-        """Update photo description."""
+        """Update photo description.
+
+        **Args:**
+        - **photo**: The existing Photo model instance.
+        - **photo_data**: Schema with new description.
+
+        **Returns:**
+        - **Photo**: The updated Photo object.
+        """
         if photo_data.description is not None:
             photo.description = photo_data.description
 
@@ -150,7 +232,15 @@ class PhotoRepository:
         return photo
 
     async def update_tags(self, photo: Photo, tag_names: list[str]) -> Photo:
-        """Update photo tags."""
+        """Update photo tags.
+
+        **Args:**
+        - **photo**: The existing Photo model instance.
+        - **tag_names**: List of new tag names.
+
+        **Returns:**
+        - **Photo**: Photo object with updated tags.
+        """
         tags = await self.tag_repo.get_or_create_many(tag_names)
         photo.tags = tags
 
@@ -160,7 +250,14 @@ class PhotoRepository:
         return photo
 
     async def delete(self, photo: Photo) -> bool:
-        """Delete a photo."""
+        """Delete a photo.
+
+        **Args:**
+        - **photo**: The Photo model instance to delete.
+
+        **Returns:**
+        - **bool**: True if successfully deleted.
+        """
         await self.session.delete(photo)
         await self.session.flush()
         return True
@@ -168,7 +265,15 @@ class PhotoRepository:
     async def search_by_description(
         self, query: str, skip: int = 0, limit: int = 20
     ) -> list[Photo]:
-        """Search photos by description."""
+        """Search photos by description.
+
+        **Args:**
+        - **query**: Search string.
+        - **skip/limit**: Pagination parameters.
+
+        **Returns:**
+        - **list[Photo]**: List of matching Photo objects.
+        """
         result = await self.session.execute(
             select(Photo)
             .options(selectinload(Photo.tags))
@@ -182,7 +287,15 @@ class PhotoRepository:
     async def search_by_tag(
         self, tag_name: str, skip: int = 0, limit: int = 20
     ) -> list[Photo]:
-        """Search photos by tag."""
+        """Search photos by tag.
+
+        **Args:**
+        - **tag_name**: Exact name of the tag (case-insensitive).
+        - **skip/limit**: Pagination parameters.
+
+        **Returns:**
+        - **list[Photo]**: List of Photo objects containing the tag.
+        """
         result = await self.session.execute(
             select(Photo)
             .options(selectinload(Photo.tags))
@@ -211,6 +324,17 @@ class PhotoRepository:
         """
         Advanced search with multiple filters.
         Returns tuple of (photos, total_count).
+
+        **Args:**
+        - **keyword**: Filter by description content.
+        - **tag**: Filter by tag name.
+        - **user_id**: Filter by creator.
+        - **min_rating/max_rating**: Filter by average rating (processed in memory).
+        - **date_from/date_to**: Filter by creation timestamp.
+        - **sort_by/sort_order**: Define the sorting logic.
+
+        **Returns:**
+        - **tuple[list[Photo], int]**: A pair of (list of photos, total items found).
         """
         # Base query with eager loading
         query = (
@@ -304,7 +428,14 @@ class PhotoRepository:
         date_from: datetime | None = None,
         date_to: datetime | None = None
     ) -> int:
-        """Get count of photos matching search criteria."""
+        """Get count of photos matching search criteria.
+
+        **Args:**
+        - **keyword, tag, user_id, date_from, date_to**: Search filters.
+
+        **Returns:**
+        - **int**: Count of matching photos.
+        """
         query = select(func.count(Photo.id))
 
         conditions = []
@@ -345,7 +476,18 @@ class PhotoTransformationRepository:
         transformation_params: str | None = None,
         qr_code_url: str | None = None
     ) -> PhotoTransformation:
-        """Create a new photo transformation record."""
+        """Create a new photo transformation record.
+
+        **Args:**
+        - **original_photo_id**: ID of the source photo.
+        - **url**: Link to the transformed image.
+        - **cloudinary_public_id**: Cloudinary ID for the new image.
+        - **transformation_params**: JSON string with transformation details.
+        - **qr_code_url**: Data URI or URL of the generated QR code.
+
+        **Returns:**
+        - **PhotoTransformation**: The created transformation record.
+        """
         transformation = PhotoTransformation(
             original_photo_id=original_photo_id,
             url=url,
@@ -361,7 +503,14 @@ class PhotoTransformationRepository:
         return transformation
 
     async def get_by_photo(self, photo_id: int) -> list[PhotoTransformation]:
-        """Get all transformations for a photo."""
+        """Get all transformations for a photo.
+
+        **Args:**
+        - **photo_id**: ID of the source photo.
+
+        **Returns:**
+        - **list[PhotoTransformation]**: List of transformations, newest first.
+        """
         result = await self.session.execute(
             select(PhotoTransformation)
             .where(PhotoTransformation.original_photo_id == photo_id)

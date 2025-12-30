@@ -3,6 +3,7 @@ from sqlalchemy import String, Integer, DateTime, ForeignKey
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from src.database.base import Base
 
+photos: Mapped[list["Photo"]] = relationship("Photo", back_populates="user", lazy="selectin")
 
 class User(Base):
     """
