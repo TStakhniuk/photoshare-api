@@ -5,6 +5,7 @@ from src.conf.settings import settings
 from src.database import redis as redis_db
 from src.auth.routes import router as auth_router
 from src.comments.routes import router as comments_router
+from src.photos.routes import router as photos_router
 
 
 @asynccontextmanager
@@ -23,6 +24,7 @@ app = FastAPI(title="PhotoShare API", lifespan=lifespan)
 
 
 app.include_router(auth_router, prefix="/auth", tags=["auth"])
+app.include_router(photos_router, prefix="/photos", tags=["photos"])
 app.include_router(comments_router, prefix="/comments", tags=["comments"])
 
 

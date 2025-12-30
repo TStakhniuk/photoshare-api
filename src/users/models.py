@@ -16,8 +16,9 @@ class User(Base):
     hashed_password: Mapped[str] = mapped_column(String, nullable=False)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
     role_id: Mapped[int] = mapped_column(ForeignKey("roles.id"))
-    role: Mapped["Role"] = relationship("Role", lazy="selectin")
 
+    role: Mapped["Role"] = relationship("Role", lazy="selectin")
+    photos: Mapped[list["Photo"]] = relationship("Photo", back_populates="user", lazy="selectin")
 
 class Role(Base):
     """
