@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 """
 Photo and Tag models with relationships.
 """
@@ -146,3 +147,22 @@ class PhotoTransformation(Base):
 
     def __repr__(self) -> str:
         return f"<PhotoTransformation(id={self.id}, original_photo_id={self.original_photo_id})>"
+=======
+from sqlalchemy import Integer
+from sqlalchemy.orm import Mapped, mapped_column, relationship
+from src.database.base import Base
+
+
+class Photo(Base):
+    """
+    SQLAlchemy model representing a photo.
+    """
+
+    __tablename__ = "photos"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+
+    comments: Mapped[list["Comment"]] = relationship(
+        "Comment", back_populates="photo", cascade="all, delete-orphan"
+    )
+>>>>>>> develop
