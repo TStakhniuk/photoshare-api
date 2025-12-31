@@ -49,16 +49,26 @@ async def signup(user_data: UserCreate, db: AsyncSession = Depends(get_db)):
 async def login(form_data: OAuth2PasswordRequestForm = Depends(), db: AsyncSession = Depends(get_db)):
     """
     Authenticates a user and issues access and refresh tokens.
+    Inactive users cannot log in.
 
     :param form_data: The login credentials (username as email and password).
     :param db: The database session dependency.
     :return: A dictionary containing the access token, refresh token, and token type.
+    :raises HTTPException: 401 if credentials are invalid or user is inactive.
     """
     user = await get_user_by_email(db, form_data.username)
     if not user or not verify_password(form_data.password, user.hashed_password):
         raise HTTPException(
             status.HTTP_401_UNAUTHORIZED,
             detail="Incorrect username or password",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+    
+    # Check if user is active
+    if not user.is_active:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="User account is deactivated",
             headers={"WWW-Authenticate": "Bearer"},
         )
 
@@ -89,6 +99,14 @@ async def refresh_tokens(data: TokenRefresh, db: AsyncSession = Depends(get_db))
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="User not found",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+    
+    # Check if user is active
+    if not user.is_active:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="User account is deactivated",
             headers={"WWW-Authenticate": "Bearer"},
         )
 
