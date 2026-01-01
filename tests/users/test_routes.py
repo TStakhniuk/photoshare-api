@@ -58,52 +58,56 @@ async def test_get_user_profile_not_found(client: AsyncClient):
 
 
 @pytest.mark.asyncio
-async def test_update_my_profile_username(client: AsyncClient, test_user: User, session):
+async def test_update_my_profile_username(client: AsyncClient, test_user: User, session, faker):
     """Test updating own profile username."""
     token = create_access_token(data={"sub": test_user.email})
     headers = {"Authorization": f"Bearer {token}"}
     
-    update_data = {"username": "newusername"}
+    new_username = faker.user_name()
+    update_data = {"username": new_username}
     response = await client.put("/users/me", json=update_data, headers=headers)
     
     assert response.status_code == status.HTTP_200_OK
     data = response.json()
-    assert data["username"] == "newusername"
+    assert data["username"] == new_username
     assert data["email"] == test_user.email  # Email should remain unchanged
     assert data["id"] == test_user.id
 
 
 @pytest.mark.asyncio
-async def test_update_my_profile_email(client: AsyncClient, test_user: User):
+async def test_update_my_profile_email(client: AsyncClient, test_user: User, faker):
     """Test updating own profile email."""
     token = create_access_token(data={"sub": test_user.email})
     headers = {"Authorization": f"Bearer {token}"}
     
-    update_data = {"email": "newemail@example.com"}
+    new_email = faker.email()
+    update_data = {"email": new_email}
     response = await client.put("/users/me", json=update_data, headers=headers)
     
     assert response.status_code == status.HTTP_200_OK
     data = response.json()
-    assert data["email"] == "newemail@example.com"
+    assert data["email"] == new_email
     assert data["username"] == test_user.username  # Username should remain unchanged
 
 
 @pytest.mark.asyncio
-async def test_update_my_profile_both_fields(client: AsyncClient, test_user: User):
+async def test_update_my_profile_both_fields(client: AsyncClient, test_user: User, faker):
     """Test updating both username and email."""
     token = create_access_token(data={"sub": test_user.email})
     headers = {"Authorization": f"Bearer {token}"}
     
+    new_username = faker.user_name()
+    new_email = faker.email()
     update_data = {
-        "username": "updateduser",
-        "email": "updated@example.com"
+        "username": new_username,
+        "email": new_email
     }
     response = await client.put("/users/me", json=update_data, headers=headers)
     
     assert response.status_code == status.HTTP_200_OK
     data = response.json()
-    assert data["username"] == "updateduser"
-    assert data["email"] == "updated@example.com"
+    assert data["username"] == new_username
+    assert data["email"] == new_email
 
 
 @pytest.mark.asyncio
@@ -122,20 +126,21 @@ async def test_update_my_profile_no_changes(client: AsyncClient, test_user: User
 
 
 @pytest.mark.asyncio
-async def test_update_my_profile_username_conflict(client: AsyncClient, test_user: User, session):
+async def test_update_my_profile_username_conflict(client: AsyncClient, test_user: User, session, faker, user_data):
     """Test that updating to existing username returns 409."""
-    # Create another user
+    # Create another user using faker
+    existing_username = faker.user_name()
     other_user_data = UserCreate(
-        username="existinguser",
-        email="existing@example.com",
-        password="password123"
+        username=existing_username,
+        email=faker.email(),
+        password=user_data["password"]
     )
     await create_user(session, other_user_data)
     
     token = create_access_token(data={"sub": test_user.email})
     headers = {"Authorization": f"Bearer {token}"}
     
-    update_data = {"username": "existinguser"}
+    update_data = {"username": existing_username}
     response = await client.put("/users/me", json=update_data, headers=headers)
     
     assert response.status_code == status.HTTP_409_CONFLICT
@@ -143,20 +148,21 @@ async def test_update_my_profile_username_conflict(client: AsyncClient, test_use
 
 
 @pytest.mark.asyncio
-async def test_update_my_profile_email_conflict(client: AsyncClient, test_user: User, session):
+async def test_update_my_profile_email_conflict(client: AsyncClient, test_user: User, session, faker, user_data):
     """Test that updating to existing email returns 409."""
-    # Create another user
+    # Create another user using faker
+    existing_email = faker.email()
     other_user_data = UserCreate(
-        username="otheruser",
-        email="existing@example.com",
-        password="password123"
+        username=faker.user_name(),
+        email=existing_email,
+        password=user_data["password"]
     )
     await create_user(session, other_user_data)
     
     token = create_access_token(data={"sub": test_user.email})
     headers = {"Authorization": f"Bearer {token}"}
     
-    update_data = {"email": "existing@example.com"}
+    update_data = {"email": existing_email}
     response = await client.put("/users/me", json=update_data, headers=headers)
     
     assert response.status_code == status.HTTP_409_CONFLICT
@@ -198,5 +204,6 @@ async def test_update_my_profile_unauthorized(client: AsyncClient):
     response = await client.put("/users/me", json=update_data)
     
     assert response.status_code == status.HTTP_401_UNAUTHORIZED
+
 
 

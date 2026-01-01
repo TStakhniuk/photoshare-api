@@ -73,6 +73,51 @@ async def get_user_by_username(db: AsyncSession, username: str) -> User | None:
     return result.scalar_one_or_none()
 
 
+async def get_user_by_id(db: AsyncSession, user_id: int) -> User | None:
+    """
+    Retrieves a user by their ID.
+
+    :param db: The database session.
+    :param user_id: The user ID to search for.
+    :return: The User object if found, otherwise None.
+    """
+    result = await db.execute(select(User).where(User.id == user_id))
+    return result.scalar_one_or_none()
+
+
+async def update_user(db: AsyncSession, user: User, update_data: dict) -> User:
+    """
+    Updates user information in the database.
+
+    :param db: The database session.
+    :param user: The User object to update.
+    :param update_data: Dictionary containing fields to update.
+    :return: The updated User object.
+    """
+    for field, value in update_data.items():
+        if hasattr(user, field):
+            setattr(user, field, value)
+    
+    await db.commit()
+    await db.refresh(user)
+    return user
+
+
+async def toggle_user_active_status(db: AsyncSession, user: User, is_active: bool) -> User:
+    """
+    Toggles the active status of a user account.
+
+    :param db: The database session.
+    :param user: The User object to update.
+    :param is_active: The new active status (True for active, False for inactive).
+    :return: The updated User object.
+    """
+    user.is_active = is_active
+    await db.commit()
+    await db.refresh(user)
+    return user
+
+
 async def get_role_by_name(db: AsyncSession, name: str) -> Role | None:
     """
     Retrieves a role by its name.

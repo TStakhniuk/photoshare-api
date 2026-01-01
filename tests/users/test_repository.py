@@ -31,7 +31,7 @@ async def test_create_second_user_is_user(session, user_data, faker):
     second_user_data = {
         "username": faker.user_name(),
         "email": faker.email(),
-        "password": "password123"
+        "password": user_data["password"]
     }
     user_in = UserCreate(**second_user_data)
     user = await create_user(session, user_in)

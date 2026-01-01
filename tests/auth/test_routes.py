@@ -23,14 +23,14 @@ async def test_signup_conflict_email(client: AsyncClient, user_data):
     assert response.json()["detail"] == "User with this email already exists"
 
 @pytest.mark.asyncio
-async def test_signup_conflict_username(client: AsyncClient, user_data):
+async def test_signup_conflict_username(client: AsyncClient, user_data, faker):
     """
     Verifies that registering with a username that already exists (even with a different email) returns a 409 Conflict error.
     """
     await client.post("/auth/signup", json=user_data)
 
     user_data_2 = user_data.copy()
-    user_data_2["email"] = "unique_email@example.com"
+    user_data_2["email"] = faker.email()
 
     response = await client.post("/auth/signup", json=user_data_2)
     assert response.status_code == 409
@@ -58,11 +58,11 @@ async def test_login_wrong_password(client: AsyncClient, user_data):
     assert response.json()["detail"] == "Incorrect username or password"
 
 @pytest.mark.asyncio
-async def test_login_user_not_found(client: AsyncClient):
+async def test_login_user_not_found(client: AsyncClient, faker, user_data):
     """
     Verifies that logging in with an email that does not exist returns a 401 Unauthorized error.
     """
-    login_data = {"username": "ghost@example.com", "password": "password123"}
+    login_data = {"username": faker.email(), "password": user_data["password"]}
     response = await client.post("/auth/login", data=login_data)
     assert response.status_code == 401
     assert response.json()["detail"] == "Incorrect username or password"
@@ -103,7 +103,7 @@ async def test_refresh_user_not_found(client: AsyncClient, user_data, session):
                                   data={"username": user_data["email"], "password": user_data["password"]})
     refresh_token = login_res.json()["refresh_token"]
 
-    await session.execute(text(f"DELETE FROM users WHERE email = '{user_data['email']}'"))
+    await session.execute(text("DELETE FROM users WHERE email = :email"), {"email": user_data["email"]})
     await session.commit()
 
     response = await client.post("/auth/refresh", json={"refresh_token": refresh_token})
@@ -127,3 +127,50 @@ async def test_logout_route(client: AsyncClient, user_data):
 
     response_again = await client.post("/auth/logout", headers=headers)
     assert response_again.status_code == 401
+
+
+@pytest.mark.asyncio
+async def test_login_inactive_user(client: AsyncClient, user_data, session):
+    """
+    Verifies that inactive users cannot log in.
+    """
+    from sqlalchemy import text
+    
+    # Signup and login to get token
+    await client.post("/auth/signup", json=user_data)
+    login_res = await client.post("/auth/login",
+                                  data={"username": user_data["email"], "password": user_data["password"]})
+    assert login_res.status_code == 200
+    
+    # Deactivate user
+    await session.execute(text("UPDATE users SET is_active = FALSE WHERE email = :email"), {"email": user_data["email"]})
+    await session.commit()
+    
+    # Try to login again
+    response = await client.post("/auth/login",
+                                  data={"username": user_data["email"], "password": user_data["password"]})
+    assert response.status_code == 403
+    assert "deactivated" in response.json()["detail"].lower()
+
+
+@pytest.mark.asyncio
+async def test_refresh_inactive_user(client: AsyncClient, user_data, session):
+    """
+    Verifies that inactive users cannot refresh tokens.
+    """
+    from sqlalchemy import text
+    
+    # Signup and login to get refresh token
+    await client.post("/auth/signup", json=user_data)
+    login_res = await client.post("/auth/login",
+                                  data={"username": user_data["email"], "password": user_data["password"]})
+    refresh_token = login_res.json()["refresh_token"]
+    
+    # Deactivate user
+    await session.execute(text("UPDATE users SET is_active = FALSE WHERE email = :email"), {"email": user_data["email"]})
+    await session.commit()
+    
+    # Try to refresh token
+    response = await client.post("/auth/refresh", json={"refresh_token": refresh_token})
+    assert response.status_code == 403
+    assert "deactivated" in response.json()["detail"].lower()
