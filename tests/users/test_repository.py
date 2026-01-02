@@ -3,6 +3,7 @@ from src.users.repository import (
     create_user,
     get_user_by_email,
     get_user_by_username,
+    get_user_by_id,
     count_users
 )
 from src.users.schemas import UserCreate
@@ -31,7 +32,7 @@ async def test_create_second_user_is_user(session, user_data, faker):
     second_user_data = {
         "username": faker.user_name(),
         "email": faker.email(),
-        "password": "password123"
+        "password": user_data["password"]
     }
     user_in = UserCreate(**second_user_data)
     user = await create_user(session, user_in)
@@ -82,3 +83,27 @@ async def test_count_users(session, user_data):
     await create_user(session, user_in)
 
     assert await count_users(session) == 1
+
+
+@pytest.mark.asyncio
+async def test_get_user_by_id_found(session, user_data):
+    """
+    Test retrieving an existing user by ID.
+    """
+    user_in = UserCreate(**user_data)
+    created_user = await create_user(session, user_in)
+
+    found_user = await get_user_by_id(session, created_user.id)
+
+    assert found_user is not None
+    assert found_user.id == created_user.id
+    assert found_user.email == user_data["email"]
+
+@pytest.mark.asyncio
+async def test_get_user_by_id_not_found(session):
+    """
+    Test retrieving a non-existent user by ID returns None.
+    """
+    found_user = await get_user_by_id(session, 9999)
+
+    assert found_user is None

@@ -17,11 +17,11 @@ async def test_add_invalid_token_to_blacklist(mock_redis):
     assert len(keys) == 0
 
 @pytest.mark.asyncio
-async def test_blacklist_token_no_exp(mock_redis):
+async def test_blacklist_token_no_exp(mock_redis, faker):
     """
     Verifies that adding a token without an expiration ('exp') claim is ignored and not stored in Redis.
     """
-    payload = {"sub": "test@example.com"}
+    payload = {"sub": faker.email()}
     token = jwt.encode(payload, settings.SECRET_KEY, algorithm=settings.ALGORITHM)
 
     await add_token_to_blacklist(token, mock_redis)
