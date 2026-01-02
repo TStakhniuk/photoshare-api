@@ -54,7 +54,6 @@ async def login(form_data: OAuth2PasswordRequestForm = Depends(), db: AsyncSessi
     :param form_data: The login credentials (username as email and password).
     :param db: The database session dependency.
     :return: A dictionary containing the access token, refresh token, and token type.
-    :raises HTTPException: 401 if credentials are invalid, 403 if user is inactive.
     """
     user = await get_user_by_email(db, form_data.username)
     if not user or not verify_password(form_data.password, user.hashed_password):

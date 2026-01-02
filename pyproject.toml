@@ -51,25 +51,3 @@ filterwarnings = [
 [tool.coverage.run]
 concurrency = ["greenlet", "thread"]
 source = ["src"]
-omit = [
-    "*/models.py",
-    "*/schemas.py",
-    "*/enums.py",
-    "*/__init__.py",
-    "*/base.py",
-    "*/settings.py",
-    "*/conf/*",
-    "*/database/*",
-    "*/services/*"
-]
-
-[tool.coverage.report]
-exclude_lines = [
-    "pragma: no cover",
-    "def __repr__",
-    "raise AssertionError",
-    "raise NotImplementedError",
-    "if __name__ == .__main__.:",
-    "if TYPE_CHECKING:",
-    "@abstractmethod",
-]

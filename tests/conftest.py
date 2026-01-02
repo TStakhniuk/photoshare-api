@@ -13,6 +13,11 @@ from src.database.db import get_db
 from src.database.redis import get_redis
 from src.main import app
 from src.conf.settings import settings
+from src.users.repository import create_user, get_role_by_name
+from src.users.schemas import UserCreate
+from src.users.models import User
+from src.users.enums import RoleEnum
+from src.auth.security import get_password_hash
 
 TEST_DATABASE_URL = settings.DATABASE_TEST_URL
 
@@ -93,8 +98,6 @@ def user_data(faker):
 @pytest.fixture(scope="function")
 async def test_user(session, user_data):
     """Creates a test user with regular user role."""
-    from src.users.repository import create_user
-    from src.users.schemas import UserCreate
     
     user_create = UserCreate(**user_data)
     user = await create_user(session, user_create)
@@ -104,10 +107,6 @@ async def test_user(session, user_data):
 @pytest.fixture(scope="function")
 async def test_admin_user(session, faker):
     """Creates a test admin user."""
-    from src.users.repository import get_role_by_name
-    from src.users.models import User
-    from src.users.enums import RoleEnum
-    from src.auth.security import get_password_hash
     
     admin_data = {
         "username": faker.user_name(),

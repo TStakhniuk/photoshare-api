@@ -9,6 +9,3 @@ async def get_redis() -> redis.Redis:
     Dependency that provides the Redis client.
     """
     return redis_client
-
-
-

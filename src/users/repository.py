@@ -73,6 +73,18 @@ async def get_user_by_username(db: AsyncSession, username: str) -> User | None:
     return result.scalar_one_or_none()
 
 
+async def get_role_by_name(db: AsyncSession, name: str) -> Role | None:
+    """
+    Retrieves a role by its name.
+
+    :param db: The database session.
+    :param name: The name of the role.
+    :return: The Role object if found, otherwise None.
+    """
+    result = await db.execute(select(Role).where(Role.name == name))
+    return result.scalar_one_or_none()
+
+
 async def get_user_by_id(db: AsyncSession, user_id: int) -> User | None:
     """
     Retrieves a user by their ID.
@@ -116,15 +128,3 @@ async def toggle_user_active_status(db: AsyncSession, user: User, is_active: boo
     await db.commit()
     await db.refresh(user)
     return user
-
-
-async def get_role_by_name(db: AsyncSession, name: str) -> Role | None:
-    """
-    Retrieves a role by its name.
-
-    :param db: The database session.
-    :param name: The name of the role.
-    :return: The Role object if found, otherwise None.
-    """
-    result = await db.execute(select(Role).where(Role.name == name))
-    return result.scalar_one_or_none()
