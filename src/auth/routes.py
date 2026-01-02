@@ -3,6 +3,11 @@ from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.database.db import get_db
+from src.auth.dependencies import oauth2_scheme, get_current_user
+from src.database.redis import get_redis
+from src.auth.token_blacklist import add_token_to_blacklist
+import redis.asyncio as redis
+from src.users.models import User
 from src.users.schemas import UserCreate, UserResponse
 from src.auth.schemas import Token, TokenRefresh
 from src.users.repository import create_user, get_user_by_email, get_user_by_username
@@ -44,6 +49,7 @@ async def signup(user_data: UserCreate, db: AsyncSession = Depends(get_db)):
 async def login(form_data: OAuth2PasswordRequestForm = Depends(), db: AsyncSession = Depends(get_db)):
     """
     Authenticates a user and issues access and refresh tokens.
+    Inactive users cannot log in.
 
     :param form_data: The login credentials (username as email and password).
     :param db: The database session dependency.
@@ -54,6 +60,14 @@ async def login(form_data: OAuth2PasswordRequestForm = Depends(), db: AsyncSessi
         raise HTTPException(
             status.HTTP_401_UNAUTHORIZED,
             detail="Incorrect username or password",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+    
+    # Check if user is active
+    if not user.is_active:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="User account is deactivated",
             headers={"WWW-Authenticate": "Bearer"},
         )
 
@@ -86,8 +100,32 @@ async def refresh_tokens(data: TokenRefresh, db: AsyncSession = Depends(get_db))
             detail="User not found",
             headers={"WWW-Authenticate": "Bearer"},
         )
+    
+    # Check if user is active
+    if not user.is_active:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="User account is deactivated",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
 
     access_token = create_access_token(data={"sub": user.email})
     new_refresh_token = create_refresh_token(data={"sub": user.email})
 
     return Token(access_token=access_token, refresh_token=new_refresh_token, token_type="bearer")
+
+
+@router.post("/logout", status_code=status.HTTP_204_NO_CONTENT)
+async def logout(
+    token: str = Depends(oauth2_scheme),
+    current_user: User = Depends(get_current_user),
+    redis_client: redis.Redis = Depends(get_redis)
+):
+    """
+    Logs out the current user by invalidating their access token.
+
+    :param token: The access token to invalidate.
+    :param current_user: The currently authenticated user (ensures the token is valid before logging out).
+    :param redis_client: The Redis client dependency.
+    """
+    await add_token_to_blacklist(token, redis_client)
