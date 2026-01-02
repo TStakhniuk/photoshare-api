@@ -15,18 +15,19 @@ def test_password_hashing():
     assert verify_password(password, hashed) is True
     assert verify_password("wrong_password", hashed) is False
 
-def test_jwt_token_creation_and_decoding():
+def test_jwt_token_creation_and_decoding(faker):
     """
     Verifies that a JWT token is created successfully and can be decoded to retrieve the original payload.
     """
-    data = {"sub": "test@example.com"}
+    test_email = faker.email()
+    data = {"sub": test_email}
     token = create_access_token(data)
 
     assert isinstance(token, str)
 
     decoded_data = decode_token(token)
     assert decoded_data is not None
-    assert decoded_data.email == "test@example.com"
+    assert decoded_data.email == test_email
 
 def test_decode_invalid_token():
     """
