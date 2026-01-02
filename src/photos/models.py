@@ -99,7 +99,7 @@ class Photo(Base):
         "Comment", back_populates="photo", cascade="all, delete-orphan", lazy="selectin"
     )
     ratings: Mapped[list["Rating"]] = relationship(
-        "Rating", back_populates="photo", cascade="all, delete-orphan"
+        "Rating", back_populates="photo", cascade="all, delete-orphan", lazy="selectin"
     )
     transformations: Mapped[list["PhotoTransformation"]] = relationship(
         "PhotoTransformation",
