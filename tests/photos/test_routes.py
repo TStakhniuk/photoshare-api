@@ -13,5 +13,5 @@ async def test_get_photos(client: AsyncClient):
 @pytest.mark.asyncio
 async def test_get_photo_not_found(client: AsyncClient):
     """Тестуємо випадок, коли фото не існує"""
-    response = await client.get("/api/photos/999999")
+    response = await client.get("/photos/999999")
     assert response.status_code == 404
