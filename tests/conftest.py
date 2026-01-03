@@ -19,7 +19,8 @@ from src.users.models import User
 from src.users.enums import RoleEnum
 from src.auth.security import get_password_hash
 
-TEST_DATABASE_URL = settings.DATABASE_TEST_URL
+# TEST_DATABASE_URL = settings.DATABASE_TEST_URL
+TEST_DATABASE_URL = "postgresql+asyncpg://postgres:postgres@localhost:5432/postgres_test"
 
 engine_test = create_async_engine(
     TEST_DATABASE_URL,
