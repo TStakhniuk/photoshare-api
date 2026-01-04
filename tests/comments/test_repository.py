@@ -2,7 +2,6 @@ import pytest
 from src.comments import repository as repo_comments
 from src.comments.schemas import CommentCreate, CommentUpdate
 
-
 @pytest.mark.asyncio
 async def test_create_comment(session, test_user, test_photo, faker):
     """Tests the successful creation of a comment."""
@@ -18,7 +17,6 @@ async def test_create_comment(session, test_user, test_photo, faker):
     assert comment.photo_id == test_photo.id
     assert comment.id is not None
 
-
 @pytest.mark.asyncio
 async def test_get_comment_by_id(session, test_user, test_photo, faker):
     """Tests retrieving a comment by its unique identifier."""
@@ -33,13 +31,11 @@ async def test_get_comment_by_id(session, test_user, test_photo, faker):
     assert retrieved.id == created.id
     assert retrieved.text == body.text
 
-
 @pytest.mark.asyncio
 async def test_get_comment_not_found(session):
     """Tests retrieving a non-existent comment returns None."""
     retrieved = await repo_comments.get_comment_by_id(session, 999)
     assert retrieved is None
-
 
 @pytest.mark.asyncio
 async def test_update_comment(session, test_user, test_photo, faker):
@@ -56,7 +52,6 @@ async def test_update_comment(session, test_user, test_photo, faker):
 
     assert updated.text == new_text
     assert updated.id == comment.id
-
 
 @pytest.mark.asyncio
 async def test_delete_comment(session, test_user, test_photo, faker):

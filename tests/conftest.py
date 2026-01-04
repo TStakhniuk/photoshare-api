@@ -19,6 +19,7 @@ from src.users.models import User
 from src.users.enums import RoleEnum
 from src.auth.security import get_password_hash
 from src.photos.models import Photo
+from src.auth.utils import create_access_token
 
 TEST_DATABASE_URL = settings.DATABASE_TEST_URL
 
@@ -141,12 +142,6 @@ async def test_admin_user(session, faker):
     return user
 
 
-def create_access_token(data: dict):
-    """Generates a secure JWT access token using the provided data and application settings."""
-    to_encode = data.copy()
-    return jwt.encode(to_encode, settings.SECRET_KEY, algorithm=settings.ALGORITHM)
-
-
 @pytest.fixture(scope="function")
 async def auth_headers(test_user):
     """Provides authorization headers for a regular user."""
@@ -163,12 +158,13 @@ async def admin_headers(test_admin_user):
 
 @pytest.fixture(scope="function")
 async def test_photo(session, test_user):
-    """Creates a dummy photo record for use in various tests."""
+    """Creates a dummy photo record."""
     photo = Photo(
-        title="Test Photo",
+        description="Test Photo",
         user_id=test_user.id,
-        image_url="http://example.com/test.jpg",
-        public_id="test_unique_id",
+        url="http://example.com/test.jpg",
+        cloudinary_public_id="test_unique_id",
+        ratings=[]
     )
     session.add(photo)
     await session.commit()
