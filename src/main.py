@@ -7,6 +7,7 @@ from src.auth.routes import router as auth_router
 from src.comments.routes import router as comments_router
 from src.photos.routes import router as photos_router
 from src.users.routes import router as users_router
+from src.ratings.routes import router as ratings_router
 
 
 @asynccontextmanager
@@ -15,7 +16,9 @@ async def lifespan(app: FastAPI):
     Context manager that handles the application startup and shutdown events.
     """
     # Startup
-    redis_db.redis_client = redis.from_url(settings.REDIS_URL, encoding="utf-8", decode_responses=True)
+    redis_db.redis_client = redis.from_url(
+        settings.REDIS_URL, encoding="utf-8", decode_responses=True
+    )
     yield
     # Shutdown
     await redis_db.redis_client.close()
@@ -28,6 +31,7 @@ app.include_router(auth_router, prefix="/auth", tags=["auth"])
 app.include_router(users_router, prefix="/users", tags=["users"])
 app.include_router(photos_router, prefix="/photos", tags=["photos"])
 app.include_router(comments_router, prefix="/comments", tags=["comments"])
+app.include_router(ratings_router, prefix="/ratings", tags=["ratings"])
 
 
 @app.get("/")

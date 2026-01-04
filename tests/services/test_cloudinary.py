@@ -16,7 +16,7 @@ async def test_upload_image(monkeypatch):
     file = UploadFile(filename="test.jpg", file=BytesIO(b""))
     file.read = fake_read
 
-    async def fake_upload(contents, folder, resource_type, allowed_formats):
+    def fake_upload(contents, folder, resource_type, allowed_formats):
         return {"secure_url": "http://cloudinary.com/fake.jpg", "public_id": "fake_id"}
 
     monkeypatch.setattr("cloudinary.uploader.upload", fake_upload)
@@ -86,3 +86,16 @@ def test_resize_image(monkeypatch):
     url = CloudinaryService.resize_image("fake_id", width=100, height=100)
     assert url == "http://cloudinary.com/resized.jpg"
     mock_build_url.assert_called_once()
+
+
+def test_transform_image_default(monkeypatch):
+    """Test transform_image handles None transformation (default value)."""
+
+    mock_build_url = MagicMock(return_value="http://cloudinary.com/default.jpg")
+    monkeypatch.setattr("cloudinary.CloudinaryImage", lambda public_id: MagicMock(build_url=mock_build_url))
+
+    url = CloudinaryService.transform_image("fake_id")
+
+    assert url == "http://cloudinary.com/default.jpg"
+
+    mock_build_url.assert_called_once_with(transformation={}, secure=True)
