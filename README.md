@@ -3,6 +3,14 @@
 A powerful and secure REST API for sharing and managing photos, built with the modern FastAPI framework. This application provides a comprehensive suite of features including photo uploading with Cloudinary transformations, QR-code generation, commenting, rating systems, and robust user role management.
 
 
+## 🌐 Live Demo
+
+The project is live and can be accessed at: https://unsightly-cacilia-photoshare-api-36a85819.koyeb.app/
+
+- **API Documentation (Swagger UI):** https://unsightly-cacilia-photoshare-api-36a85819.koyeb.app/docs
+- **Alternative Docs (ReDoc):** https://unsightly-cacilia-photoshare-api-36a85819.koyeb.app/redoc
+
+
 ## ✨ Key Features
 
 - **🔐 Secure Authentication:**
